@@ -69,4 +69,25 @@ describe('export command', () => {
     expect(error.message).toContain('Invalid format "not-a-format"');
     expect(process.exitCode).toBe(1);
   });
+
+  it('emits exactly one trailing newline for css-tailwind output', async () => {
+    const writeSpy = spyOn(process.stdout, 'write').mockImplementation(() => true);
+    let output = '';
+
+    try {
+      await exportCommand.run!({
+        args: {
+          file: FIXTURE_PATH,
+          format: 'css-tailwind',
+        },
+      } as any);
+      expect(writeSpy.mock.calls.length).toBe(1);
+      output = String(writeSpy.mock.calls[0][0]);
+    } finally {
+      writeSpy.mockRestore();
+    }
+
+    expect(output).toEndWith('\n');
+    expect(output).not.toEndWith('\n\n');
+  });
 });

@@ -20,12 +20,13 @@ import type {
   ResolvedColor,
   ResolvedDimension,
   ResolvedTypography,
+  ResolvedShadow,
   ResolvedValue,
   ComponentDef,
   Finding,
 } from './spec.js';
 
-import { isValidColor, isParseableDimension, isTokenReference, parseDimensionParts, VALID_TYPOGRAPHY_PROPS } from './spec.js';
+import { isValidColor, isParseableDimension, isTokenReference, parseDimensionParts, VALID_TYPOGRAPHY_PROPS, VALID_SHADOW_PROPS } from './spec.js';
 import { parseCssColor } from './color-parser.js';
 
 import {
@@ -35,6 +36,7 @@ import {
 
 const SCHEMA_KEY_SET: ReadonlySet<string> = new Set(SCHEMA_KEYS);
 const TYPOGRAPHY_PROP_SET: ReadonlySet<string> = new Set(VALID_TYPOGRAPHY_PROPS);
+const SHADOW_PROP_SET: ReadonlySet<string> = new Set(VALID_SHADOW_PROPS);
 
 /**
  * Builds a resolved DesignSystemState from parsed YAML tokens.
@@ -51,6 +53,7 @@ export class ModelHandler implements ModelSpec {
       const typography = new Map<string, ResolvedTypography>();
       const rounded = new Map<string, ResolvedDimension>();
       const spacing = new Map<string, ResolvedDimension>();
+      const shadows = new Map<string, ResolvedShadow>();
 
       // ── Phase 1: Resolve primitive tokens ──────────────────────────
       // Colors
@@ -135,6 +138,21 @@ export class ModelHandler implements ModelSpec {
         }, '', 0, findings, 'spacing');
       }
 
+      // Shadows — composite tokens (offsetX/offsetY/blur/spread/color), same
+      // shape as typography. `color` may be a literal or a {colors.*}
+      // reference; resolveReference already chases reference chains, so it
+      // resolves correctly regardless of whether the referenced color was
+      // itself stored as a raw reference in Phase 1.
+      if (input.shadows) {
+        const isCollision = buildCollisionGuard('shadows', findings);
+        for (const [name, props] of Object.entries(input.shadows)) {
+          if (isCollision(name)) continue;
+          const resolved = parseShadow(props, `shadows.${name}`, symbolTable, findings);
+          shadows.set(name, resolved);
+          symbolTable.set(`shadows.${name}`, resolved);
+        }
+      }
+
       // ── Phase 2: Resolve chained token references ──────────────────
       // Iterate the symbol table directly (not re-walking raw input) so that
       // Phase 1 collision decisions are never overwritten.
@@ -217,6 +235,7 @@ export class ModelHandler implements ModelSpec {
           typography,
           rounded,
           spacing,
+          shadows,
           components,
           symbolTable,
           sections: input.sections,
@@ -232,6 +251,7 @@ export class ModelHandler implements ModelSpec {
           typography: new Map(),
           rounded: new Map(),
           spacing: new Map(),
+          shadows: new Map(),
           components: new Map(),
           symbolTable: new Map(),
         },
@@ -413,6 +433,86 @@ function parseTypography(props: Record<string, string | number>, path: string, f
         severity: 'warning',
         path: `${path}.${key}`,
         message: `'${key}' is not a recognized typography property. Valid properties: ${VALID_TYPOGRAPHY_PROPS.join(', ')}.`,
+      });
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Parse a shadow properties object into a ResolvedShadow.
+ * `spread` defaults to 0px when omitted. `color` accepts a literal CSS color
+ * or a `{colors.*}` (or any) token reference, resolved via the symbol table.
+ */
+function parseShadow(
+  props: Record<string, unknown>,
+  path: string,
+  symbolTable: Map<string, ResolvedValue>,
+  findings: Finding[],
+): ResolvedShadow {
+  const result: ResolvedShadow = { type: 'shadow' };
+
+  const dimensionProps = ['offsetX', 'offsetY', 'blur'] as const;
+  for (const prop of dimensionProps) {
+    const raw = props[prop];
+    if (typeof raw !== 'string') continue;
+    if (isParseableDimension(raw)) {
+      result[prop] = parseDimension(raw);
+    } else if (!isTokenReference(raw)) {
+      findings.push({
+        severity: 'error',
+        path: `${path}.${prop}`,
+        message: `'${raw}' is not a valid dimension.`,
+      });
+    }
+  }
+
+  const rawSpread = props['spread'];
+  if (rawSpread === undefined) {
+    result.spread = { type: 'dimension', value: 0, unit: 'px' };
+  } else if (typeof rawSpread === 'string') {
+    if (isParseableDimension(rawSpread)) {
+      result.spread = parseDimension(rawSpread);
+    } else if (!isTokenReference(rawSpread)) {
+      findings.push({
+        severity: 'error',
+        path: `${path}.spread`,
+        message: `'${rawSpread}' is not a valid dimension.`,
+      });
+    }
+  }
+
+  const rawColor = props['color'];
+  if (typeof rawColor === 'string') {
+    if (isTokenReference(rawColor)) {
+      const resolved = resolveReference(symbolTable, rawColor.slice(1, -1), new Set());
+      if (resolved !== null && typeof resolved === 'object' && 'type' in resolved && resolved.type === 'color') {
+        result.color = resolved as ResolvedColor;
+      } else {
+        findings.push({
+          severity: 'error',
+          path: `${path}.color`,
+          message: `'${rawColor}' does not resolve to a valid color.`,
+        });
+      }
+    } else if (isValidColor(rawColor)) {
+      result.color = parseColor(rawColor);
+    } else {
+      findings.push({
+        severity: 'error',
+        path: `${path}.color`,
+        message: `'${rawColor}' is not a valid color. Expected a CSS color value (e.g., #ffffff, rgb(0 0 0)) or a {colors.*} reference.`,
+      });
+    }
+  }
+
+  for (const key of Object.keys(props)) {
+    if (!SHADOW_PROP_SET.has(key)) {
+      findings.push({
+        severity: 'warning',
+        path: `${path}.${key}`,
+        message: `'${key}' is not a recognized shadow property. Valid properties: ${VALID_SHADOW_PROPS.join(', ')}.`,
       });
     }
   }

@@ -24,6 +24,7 @@ describe('LintRule type', () => {
       typography: new Map(),
       rounded: new Map(),
       spacing: new Map(),
+      shadows: new Map(),
       components: new Map(),
       symbolTable: new Map(),
     })).toEqual([]);

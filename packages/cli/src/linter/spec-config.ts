@@ -105,7 +105,8 @@ export interface SectionDef {
   aliases?: readonly string[] | undefined;
 }
 
-export interface TypographyPropertyDef {
+/** A named, typed property with an optional description — shared shape for typography and shadow sub-properties. */
+export interface PropertyDef {
   /** Property name as it appears in YAML. */
   name: string;
   /** Human-readable type for the spec document. */
@@ -113,6 +114,9 @@ export interface TypographyPropertyDef {
   /** Extended description for the spec (appears after the type). */
   description?: string | undefined;
 }
+
+/** @deprecated Use {@link PropertyDef}. Kept for backward compatibility with existing consumers. */
+export type TypographyPropertyDef = PropertyDef;
 
 export interface ComponentSubTokenDef {
   /** Sub-token property name. */
@@ -158,9 +162,9 @@ export const SPEC_TYPES: Record<string, TypeDef> = config.types;
 
 export const SECTIONS = config.sections;
 
-export const TYPOGRAPHY_PROPERTIES: readonly TypographyPropertyDef[] = config.typography_properties;
+export const TYPOGRAPHY_PROPERTIES: readonly PropertyDef[] = config.typography_properties;
 
-export const SHADOW_PROPERTIES: readonly TypographyPropertyDef[] = config.shadow_properties;
+export const SHADOW_PROPERTIES: readonly PropertyDef[] = config.shadow_properties;
 
 export const COMPONENT_SUB_TOKENS: readonly ComponentSubTokenDef[] = config.component_sub_tokens;
 

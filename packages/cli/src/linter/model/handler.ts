@@ -453,32 +453,29 @@ function parseShadow(
 ): ResolvedShadow {
   const result: ResolvedShadow = { type: 'shadow' };
 
-  const dimensionProps = ['offsetX', 'offsetY', 'blur'] as const;
+  const dimensionProps = ['offsetX', 'offsetY', 'blur', 'spread'] as const;
   for (const prop of dimensionProps) {
     const raw = props[prop];
+    if (raw === undefined) {
+      if (prop === 'spread') result.spread = { type: 'dimension', value: 0, unit: 'px' };
+      continue;
+    }
     if (typeof raw !== 'string') continue;
     if (isParseableDimension(raw)) {
-      result[prop] = parseDimension(raw);
+      const parsed = parseDimension(raw);
+      if (parsed.unit !== 'px' && parsed.unit !== 'rem' && parsed.unit !== 'em') {
+        findings.push({
+          severity: 'error',
+          path: `${path}.${prop}`,
+          message: `'${raw}' has an invalid unit '${parsed.unit}'. Only px, rem, and em are allowed.`,
+        });
+      }
+      result[prop] = parsed;
     } else if (!isTokenReference(raw)) {
       findings.push({
         severity: 'error',
         path: `${path}.${prop}`,
         message: `'${raw}' is not a valid dimension.`,
-      });
-    }
-  }
-
-  const rawSpread = props['spread'];
-  if (rawSpread === undefined) {
-    result.spread = { type: 'dimension', value: 0, unit: 'px' };
-  } else if (typeof rawSpread === 'string') {
-    if (isParseableDimension(rawSpread)) {
-      result.spread = parseDimension(rawSpread);
-    } else if (!isTokenReference(rawSpread)) {
-      findings.push({
-        severity: 'error',
-        path: `${path}.spread`,
-        message: `'${rawSpread}' is not a valid dimension.`,
       });
     }
   }

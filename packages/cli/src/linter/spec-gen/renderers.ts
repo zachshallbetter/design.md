@@ -19,7 +19,7 @@
  * Each function returns a ready-to-embed markdown string.
  */
 
-import type { SpecConfig, TypographyPropertyDef, SectionDef, ComponentSubTokenDef, TypeDef } from '../spec-config.js';
+import type { SpecConfig, PropertyDef, SectionDef, ComponentSubTokenDef, TypeDef } from '../spec-config.js';
 
 // ── YAML code block helpers ─────────────────────────────────────
 
@@ -98,7 +98,7 @@ export function componentsExample(config: SpecConfig): string {
 
 /** Typography property list (for the schema section). */
 export function typographyPropertyList(config: SpecConfig): string {
-  return config.TYPOGRAPHY_PROPERTIES.map((p: TypographyPropertyDef) =>
+  return config.TYPOGRAPHY_PROPERTIES.map((p: PropertyDef) =>
     p.description
       ? `- \`${p.name}\` (${p.type}) - ${p.description}`
       : `- \`${p.name}\` (${p.type})`
@@ -107,7 +107,7 @@ export function typographyPropertyList(config: SpecConfig): string {
 
 /** Shadow property list (for the schema section). */
 export function shadowPropertyList(config: SpecConfig): string {
-  return config.SHADOW_PROPERTIES.map((p: TypographyPropertyDef) =>
+  return config.SHADOW_PROPERTIES.map((p: PropertyDef) =>
     p.description
       ? `- \`${p.name}\` (${p.type}) - ${p.description}`
       : `- \`${p.name}\` (${p.type})`

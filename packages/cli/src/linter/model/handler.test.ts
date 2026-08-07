@@ -882,5 +882,76 @@ describe('ModelHandler', () => {
       const errors = result.findings.filter(f => f.severity === 'error');
       expect(errors.some(f => f.message.includes('shadows') && f.message.includes('already defined'))).toBe(true);
     });
+
+    it('resolves a shadow color referencing a chained/indirect color alias', () => {
+      const result = handler.execute(makeParsed({
+        colors: { base: '#101010', alias: '{colors.base}' },
+        shadows: {
+          card: { offsetX: '0px', offsetY: '4px', blur: '8px', color: '{colors.alias}' },
+        },
+      }));
+      expect(result.findings.filter(f => f.severity === 'error')).toEqual([]);
+      expect(result.designSystem.shadows.get('card')!.color?.hex).toBe('#101010');
+    });
+
+    it('emits an error when color references a non-color resolved value', () => {
+      const result = handler.execute(makeParsed({
+        rounded: { md: '8px' },
+        shadows: {
+          card: { offsetX: '0px', offsetY: '4px', blur: '8px', color: '{rounded.md}' },
+        },
+      }));
+      expect(result.findings.some(f => f.path === 'shadows.card.color' && f.severity === 'error')).toBe(true);
+      expect(result.designSystem.shadows.get('card')!.color).toBeUndefined();
+    });
+
+    it('resolves a {rounded.*} / {spacing.*} token reference for a dimension sub-field', () => {
+      const result = handler.execute(makeParsed({
+        spacing: { sm: '8px' },
+        shadows: {
+          card: { offsetX: '0px', offsetY: '{spacing.sm}', blur: '8px', color: '#000000' },
+        },
+      }));
+      expect(result.findings.filter(f => f.severity === 'error')).toEqual([]);
+      expect(result.designSystem.shadows.get('card')!.offsetY).toEqual({ type: 'dimension', value: 8, unit: 'px' });
+    });
+
+    it('emits an error when a dimension reference does not resolve to a dimension', () => {
+      const result = handler.execute(makeParsed({
+        colors: { primary: '#ffffff' },
+        shadows: {
+          card: { offsetX: '0px', offsetY: '{colors.primary}', blur: '8px', color: '#000000' },
+        },
+      }));
+      expect(result.findings.some(f => f.path === 'shadows.card.offsetY' && f.severity === 'error')).toBe(true);
+    });
+
+    it('emits an error instead of throwing when a shadow token is not an object', () => {
+      const result = handler.execute(makeParsed({
+        colors: { valid: '#ffffff' },
+        shadows: { broken: null as unknown as Record<string, string> },
+      }));
+      // The malformed shadow entry does not swallow findings for the rest of the file.
+      expect(result.findings.some(f => f.path === 'shadows.broken' && f.severity === 'error')).toBe(true);
+      expect(result.designSystem.colors.get('valid')).toBeDefined();
+    });
+
+    it('emits an error for a non-string dimension sub-field instead of silently dropping it', () => {
+      const result = handler.execute(makeParsed({
+        shadows: {
+          card: { offsetX: 4, offsetY: '4px', blur: '8px', color: '#000000' } as unknown as Record<string, string>,
+        },
+      }));
+      expect(result.findings.some(f => f.path === 'shadows.card.offsetX' && f.severity === 'error')).toBe(true);
+    });
+
+    it('emits an error for a non-string color instead of silently dropping it', () => {
+      const result = handler.execute(makeParsed({
+        shadows: {
+          card: { offsetX: '0px', offsetY: '4px', blur: '8px', color: true } as unknown as Record<string, string>,
+        },
+      }));
+      expect(result.findings.some(f => f.path === 'shadows.card.color' && f.severity === 'error')).toBe(true);
+    });
   });
 });

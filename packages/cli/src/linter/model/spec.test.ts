@@ -29,7 +29,7 @@ describe('isValidColor', () => {
 });
 
 describe('isStandardDimension', () => {
-  const standard = ['12px', '1.5rem', '0px', '42px', '0.75rem', '100px', '12em', '-0.02em'];
+  const standard = ['12px', '1.5rem', '0px', '42px', '0.75rem', '100px', '12em', '-0.02em', '10pt', '20mm', '5cm', '2.5in'];
   const nonStandard = ['42', 'px', 'rem', '12vh', '', '12 px', '12vw'];
 
   it.each(standard)('accepts standard dimension: %s', (dim: string) => {

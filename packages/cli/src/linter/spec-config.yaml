@@ -27,6 +27,10 @@ units:
   - px
   - em
   - rem
+  - pt
+  - mm
+  - cm
+  - in
 
 types:
   Color:
@@ -45,6 +49,10 @@ types:
       - px
       - em
       - rem
+      - pt
+      - mm
+      - cm
+      - in
 
 sections:
   - canonical: Overview
@@ -92,6 +100,10 @@ component_sub_tokens:
   - name: rounded
     type: Dimension
   - name: padding
+    type: Dimension
+  - name: paddingX
+    type: Dimension
+  - name: paddingY
     type: Dimension
   - name: size
     type: Dimension

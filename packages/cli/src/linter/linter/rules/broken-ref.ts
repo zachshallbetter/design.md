@@ -14,6 +14,7 @@
 
 import type { DesignSystemState } from '../../model/spec.js';
 import { VALID_COMPONENT_SUB_TOKENS } from '../../model/spec.js';
+import { COMPONENT_SUB_TOKENS } from '../../spec-config.js';
 import type { RuleDescriptor, RuleFinding } from './types.js';
 
 /**
@@ -21,6 +22,11 @@ import type { RuleDescriptor, RuleFinding } from './types.js';
  */
 export function brokenRef(state: DesignSystemState): RuleFinding[] {
   const findings: RuleFinding[] = [];
+  const expectedTypes = new Map<string, string>();
+  for (const token of COMPONENT_SUB_TOKENS) {
+    expectedTypes.set(token.name, token.type);
+  }
+
   for (const [compName, comp] of state.components) {
     // Unresolved references
     for (const ref of comp.unresolvedRefs) {
@@ -30,14 +36,23 @@ export function brokenRef(state: DesignSystemState): RuleFinding[] {
       });
     }
 
-    // Unknown component sub-tokens (lower severity override)
-    for (const [propName] of comp.properties) {
+    // Unknown component sub-tokens (lower severity override) and type validation
+    for (const [propName, resolved] of comp.properties) {
       if (!(VALID_COMPONENT_SUB_TOKENS as readonly string[]).includes(propName)) {
         findings.push({
           severity: 'warning',
           path: `components.${compName}.${propName}`,
           message: `'${propName}' is not a recognized component sub-token. Valid sub-tokens: ${VALID_COMPONENT_SUB_TOKENS.join(', ')}.`,
         });
+      } else if (resolved && typeof resolved === 'object' && 'type' in resolved) {
+        const expectedType = expectedTypes.get(propName);
+        if (expectedType && resolved.type.toLowerCase() !== expectedType.toLowerCase()) {
+          findings.push({
+            severity: 'warning',
+            path: `components.${compName}.${propName}`,
+            message: `'${propName}' expects a ${expectedType} token, but resolved to '${resolved.type}'.`,
+          });
+        }
       }
     }
   }
@@ -47,6 +62,6 @@ export function brokenRef(state: DesignSystemState): RuleFinding[] {
 export const brokenRefRule: RuleDescriptor = {
   name: 'broken-ref',
   severity: 'error',
-  description: 'Broken/circular references and unknown component sub-tokens.',
+  description: 'Broken/circular references, unknown component sub-tokens, and property type mismatches.',
   run: brokenRef,
 };

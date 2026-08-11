@@ -321,7 +321,7 @@ The linter runs eleven rules against a parsed DESIGN.md. Each rule produces find
 
 | Rule | Severity | What it checks |
 |:-----|:---------|:---------------|
-| `broken-ref` | error | Token references (`{colors.primary}`) that don't resolve to any defined token |
+| `broken-ref` | error | Broken/circular references, unknown component sub-tokens, and property type mismatches (mismatched types emit warnings) |
 | `missing-primary` | warning | Colors are defined but no `primary` color exists — agents will auto-generate one |
 | `contrast-ratio` | warning | Component `backgroundColor`/`textColor` pairs below WCAG AA minimum (4.5:1) |
 | `orphaned-tokens` | warning | Color tokens defined but never referenced by any component |

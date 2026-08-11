@@ -46,6 +46,64 @@ describe('brokenRef', () => {
     expect(subTokenDiag!.severity).toBe('warning');
   });
 
+  it('warns when a component sub-token resolves to a mismatched type', () => {
+    const state = buildState({
+      colors: { primary: '#ff0000' },
+      rounded: { sm: '4px' },
+      components: {
+        button: {
+          backgroundColor: '{rounded.sm}',
+          rounded: '{colors.primary}',
+        },
+      },
+    });
+    const findings = brokenRef(state);
+    const bgWarning = findings.find(f => f.path === 'components.button.backgroundColor');
+    const roundedWarning = findings.find(f => f.path === 'components.button.rounded');
+
+    expect(bgWarning).toBeDefined();
+    expect(bgWarning!.severity).toBe('warning');
+    expect(bgWarning!.message).toContain("expects a Color token, but resolved to 'dimension'");
+
+    expect(roundedWarning).toBeDefined();
+    expect(roundedWarning!.severity).toBe('warning');
+    expect(roundedWarning!.message).toContain("expects a Dimension token, but resolved to 'color'");
+  });
+
+  it('warns when a typography property references a color token', () => {
+    const state = buildState({
+      colors: { primary: '#ff0000' },
+      components: {
+        button: {
+          typography: '{colors.primary}',
+        },
+      },
+    });
+    const findings = brokenRef(state);
+    const typoWarning = findings.find(f => f.path === 'components.button.typography');
+    expect(typoWarning).toBeDefined();
+    expect(typoWarning!.severity).toBe('warning');
+    expect(typoWarning!.message).toContain("expects a Typography token, but resolved to 'color'");
+  });
+
+  it('does not warn when references are typed correctly', () => {
+    const state = buildState({
+      colors: { primary: '#ff0000' },
+      rounded: { sm: '4px' },
+      components: {
+        button: {
+          backgroundColor: '{colors.primary}',
+          rounded: '{rounded.sm}',
+        },
+      },
+    });
+    const findings = brokenRef(state);
+    const bgWarning = findings.find(f => f.path === 'components.button.backgroundColor');
+    const roundedWarning = findings.find(f => f.path === 'components.button.rounded');
+    expect(bgWarning).toBeUndefined();
+    expect(roundedWarning).toBeUndefined();
+  });
+
   it('has a valid rule descriptor', () => {
     expect(brokenRefRule.name).toBe('broken-ref');
     expect(brokenRefRule.severity).toBe('error');

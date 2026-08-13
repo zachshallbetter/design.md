@@ -429,6 +429,52 @@ describe('ModelHandler', () => {
     });
   });
 
+  // ── Hypertokens Support ───────────────────────────────────────────
+  describe('hypertokens support', () => {
+    it('parses raw hypertokens and resolves internal references', () => {
+      const result = handler.execute(makeParsed({
+        colors: { surface: '#ffffff' },
+        rounded: { md: '8px' },
+        hypertokens: {
+          'card-style': {
+            backgroundColor: '{colors.surface}',
+            rounded: '{rounded.md}',
+            opacity: 0.9,
+          },
+        },
+      }));
+      expect(result.findings.length).toBe(0);
+      const cardStyle = result.designSystem.hypertokens.get('card-style');
+      expect(cardStyle).toBeDefined();
+      const bg = cardStyle?.get('backgroundColor');
+      expect(typeof bg === 'object' && bg !== null && 'type' in bg && bg.type === 'color').toBe(true);
+      expect(cardStyle?.get('opacity')).toBe(0.9);
+    });
+
+    it('resolves component references to hypertokens', () => {
+      const result = handler.execute(makeParsed({
+        colors: { surface: '#ffffff' },
+        hypertokens: {
+          'card-style': {
+            backgroundColor: '{colors.surface}',
+          },
+        },
+        components: {
+          'card': {
+            style: '{hypertokens.card-style}',
+          },
+        },
+      }));
+      const card = result.designSystem.components.get('card');
+      expect(card).toBeDefined();
+      const style = card?.properties.get('style');
+      expect(style instanceof Map).toBe(true);
+      const hyperMap = style as Map<string, any>;
+      const bg = hyperMap.get('backgroundColor');
+      expect(typeof bg === 'object' && bg !== null && 'type' in bg && bg.type === 'color').toBe(true);
+    });
+  });
+
   // ── Cycle N: Non-standard units are parsed, not dropped ────────────
   describe('non-standard dimension units', () => {
     it('emits diagnostic for non-standard dimension units in typography', () => {

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "$description": "Brutalist Archive",
+  "color": {
+    "$type": "color",
+    "paper": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.957,
+          0.953,
+          0.937
+        ],
+        "hex": "#f4f3ef"
+      }
+    },
+    "ink": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.051,
+          0.051,
+          0.051
+        ],
+        "hex": "#0d0d0d"
+      }
+    },
+    "rust": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.788,
+          0.29,
+          0.161
+        ],
+        "hex": "#c94a29"
+      }
+    },
+    "cement": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.831,
+          0.824,
+          0.804
+        ],
+        "hex": "#d4d2cd"
+      }
+    }
+  },
+  "rounded": {
+    "$type": "dimension",
+    "none": {
+      "$value": {
+        "value": 0,
+        "unit": "px"
+      }
+    },
+    "sm": {
+      "$value": {
+        "value": 2,
+        "unit": "px"
+      }
+    }
+  }
+}

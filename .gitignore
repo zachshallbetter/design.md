@@ -5,3 +5,5 @@ dist/
 bun.lockb
 *.tgz
 .turbo/
+.DS_Store
+

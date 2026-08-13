@@ -53,6 +53,7 @@ export interface ParsedDesignSystem {
   rounded?: Record<string, any> | undefined;
   spacing?: Record<string, any> | undefined;
   components?: Record<string, Record<string, any>> | undefined;
+  hypertokens?: Record<string, Record<string, any>> | undefined;
   sourceMap: Map<string, SourceLocation>;
   /** Markdown heading names found in the document (e.g., 'Colors', 'Typography') */
   sections?: string[] | undefined;
@@ -72,6 +73,7 @@ export const SCHEMA_KEYS = [
   'typography',
   'rounded',
   'spacing',
+  'hypertokens',
   'components',
 ] as const;
 

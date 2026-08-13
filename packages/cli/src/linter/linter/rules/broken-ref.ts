@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { DesignSystemState } from '../../model/spec.js';
-import { VALID_COMPONENT_SUB_TOKENS } from '../../model/spec.js';
+import { VALID_COMPONENT_SUB_TOKENS, isTokenReference } from '../../model/spec.js';
 import type { RuleDescriptor, RuleFinding } from './types.js';
 
 /**
@@ -21,6 +21,19 @@ import type { RuleDescriptor, RuleFinding } from './types.js';
  */
 export function brokenRef(state: DesignSystemState): RuleFinding[] {
   const findings: RuleFinding[] = [];
+
+  // Check unresolved references in hypertokens
+  for (const [hyperName, props] of state.hypertokens) {
+    for (const [propName, value] of props) {
+      if (typeof value === 'string' && isTokenReference(value)) {
+        findings.push({
+          path: `hypertokens.${hyperName}.${propName}`,
+          message: `Reference ${value} does not resolve to any defined token.`,
+        });
+      }
+    }
+  }
+
   for (const [compName, comp] of state.components) {
     // Unresolved references
     for (const ref of comp.unresolvedRefs) {

@@ -53,6 +53,9 @@ rounded:
   <scale-level>: <Dimension>
 spacing:
   <scale-level>: <Dimension | number>
+hypertokens:
+  <hypertoken-name>:
+    <property-name>: <string|number|boolean|token reference>
 components:
   <component-name>:
     <token-name>: <string|token reference>
@@ -109,8 +112,9 @@ Every `DESIGN.md` follows the same structure. Sections can be omitted if they're
 4. **Layout** (also: "Layout & Spacing")
 5. **Elevation & Depth** (also: "Elevation")
 6. **Shapes**
-7. **Components**
-8. **Do's and Don'ts**
+7. **Hypertokens**
+8. **Components**
+9. **Do's and Don'ts**
 
 ### Prose and Tokens
 
@@ -296,6 +300,46 @@ rounded:
   full: 9999px
 ```
 
+## Hypertokens
+
+This section defines composite token groups (style mixins or visual packages) that can be shared across multiple components.
+
+### Concept & Origin
+
+The concept of "Hypertokens" was introduced by Jake Albaugh ([@jake-figma](https://github.com/jake-figma)) at Figma Config 2026. It addresses the gap between atomic tokens (like colors and border radii) and concrete components (like buttons and cards). When AI agents generate UIs from design specifications, a lack of intermediate structure forces the agent to guess the visual relationship between tokens. Hypertokens act as a machine-readable contract of design intent, packaging multiple token decisions into a single reusable style.
+
+Example:
+
+```markdown
+## Hypertokens
+
+We define our core card and elevation aesthetics as composite style mixins:
+
+*   **Card Style (card-style)**: Bundles limestone surface color, standard 8px rounded corners, and a card shadow.
+*   **Glass Vibe (glass-vibe)**: Bundles a semi-transparent surface, zero border radius, and high backdrop blur.
+```
+
+### Design Tokens
+
+The `hypertokens` section defines these composite style packages. It is a map\<string, map\<string, string | number | boolean>>, where each key is a hypertoken name mapping to its internal style properties (e.g. `backgroundColor`, `rounded`, `boxShadow`, `opacity`). The properties can be literal values, or references to primitive design tokens (e.g. `{colors.surface}`).
+
+```yaml
+hypertokens:
+  card-style:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.md}"
+    boxShadow: "{shadows.card}"
+    opacity: 0.95
+```
+
+Components can reference a hypertoken in the components section using the special `style` property:
+
+```yaml
+components:
+  card-walk-stat:
+    style: "{hypertokens.card-style}"
+```
+
 ## Components
 
 This section provides style guidance for component atoms within the design system. The following are common component types. Design systems are encouraged to define additional components relevant to their domain.
@@ -339,6 +383,7 @@ Each component has a set of properties that are themselves design tokens:
 - size: \<Dimension\>
 - height: \<Dimension\>
 - width: \<Dimension\>
+- style: \<Hypertoken\>
 
 ## Do's and Don'ts
 

@@ -51,6 +51,7 @@ export class ModelHandler implements ModelSpec {
       const typography = new Map<string, ResolvedTypography>();
       const rounded = new Map<string, ResolvedDimension>();
       const spacing = new Map<string, ResolvedDimension>();
+      const hypertokens = new Map<string, Map<string, ResolvedValue>>();
 
       // ── Phase 1: Resolve primitive tokens ──────────────────────────
       // Colors
@@ -135,13 +136,66 @@ export class ModelHandler implements ModelSpec {
         }, '', 0, findings, 'spacing');
       }
 
+      // Hypertokens
+      if (input.hypertokens) {
+        for (const [hyperName, props] of Object.entries(input.hypertokens)) {
+          if (!props || typeof props !== 'object') continue;
+          const resolvedProps = new Map<string, ResolvedValue>();
+
+          for (const [propName, rawValue] of Object.entries(props)) {
+            const symKey = `hypertokens.${hyperName}.${propName}`;
+            if (typeof rawValue === 'number' || typeof rawValue === 'boolean') {
+              resolvedProps.set(propName, rawValue);
+              symbolTable.set(symKey, rawValue);
+            } else if (typeof rawValue === 'string') {
+              if (isTokenReference(rawValue)) {
+                resolvedProps.set(propName, rawValue);
+                symbolTable.set(symKey, rawValue);
+              } else if (isValidColor(rawValue)) {
+                const resolved = parseColor(rawValue);
+                resolvedProps.set(propName, resolved);
+                symbolTable.set(symKey, resolved);
+              } else if (isParseableDimension(rawValue)) {
+                const resolved = parseDimension(rawValue);
+                resolvedProps.set(propName, resolved);
+                symbolTable.set(symKey, resolved);
+              } else {
+                resolvedProps.set(propName, rawValue);
+                symbolTable.set(symKey, rawValue);
+              }
+            } else {
+              resolvedProps.set(propName, rawValue);
+              symbolTable.set(symKey, rawValue);
+            }
+          }
+          hypertokens.set(hyperName, resolvedProps);
+          symbolTable.set(`hypertokens.${hyperName}`, resolvedProps);
+        }
+      }
+
       // ── Phase 2: Resolve chained token references ──────────────────
       // Iterate the symbol table directly (not re-walking raw input) so that
       // Phase 1 collision decisions are never overwritten.
       for (const [key, value] of symbolTable) {
         if (typeof value !== 'string' || !isTokenReference(value)) continue;
         const resolved = resolveReference(symbolTable, value.slice(1, -1), new Set());
-        if (resolved === null || typeof resolved !== 'object' || !('type' in resolved)) continue;
+        if (resolved === null) continue;
+
+        if (key.startsWith('hypertokens.')) {
+          const parts = key.split('.');
+          if (parts.length === 3) {
+            const hyperName = parts[1]!;
+            const propName = parts[2]!;
+            const hyperMap = hypertokens.get(hyperName);
+            if (hyperMap) {
+              hyperMap.set(propName, resolved);
+            }
+          }
+          symbolTable.set(key, resolved);
+          continue;
+        }
+
+        if (typeof resolved !== 'object' || !('type' in resolved)) continue;
 
         if (key.startsWith('colors.') && resolved.type === 'color') {
           const name = key.slice('colors.'.length);
@@ -217,6 +271,7 @@ export class ModelHandler implements ModelSpec {
           typography,
           rounded,
           spacing,
+          hypertokens,
           components,
           symbolTable,
           sections: input.sections,
@@ -232,6 +287,7 @@ export class ModelHandler implements ModelSpec {
           typography: new Map(),
           rounded: new Map(),
           spacing: new Map(),
+          hypertokens: new Map(),
           components: new Map(),
           symbolTable: new Map(),
         },

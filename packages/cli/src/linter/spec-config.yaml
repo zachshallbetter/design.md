@@ -59,6 +59,7 @@ sections:
     aliases:
       - Elevation
   - canonical: Shapes
+  - canonical: Hypertokens
   - canonical: Components
   - canonical: "Do's and Don'ts"
 
@@ -99,6 +100,8 @@ component_sub_tokens:
     type: Dimension
   - name: width
     type: Dimension
+  - name: style
+    type: Hypertoken
 
 color_roles:
   - primary

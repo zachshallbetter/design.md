@@ -126,25 +126,6 @@ colors:
     });
   });
 
-  // ── Cycle 7: Hypertokens extraction ───────────────────────────────
-  describe('hypertokens extraction', () => {
-    it('extracts hypertokens section correctly', () => {
-      const input = `---
-hypertokens:
-  card-style:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.md}"
-    boxShadow: "{shadows.card}"
----`;
-      const result = handler.execute({ content: input });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.hypertokens?.['card-style']?.['backgroundColor']).toBe('{colors.surface}');
-        expect(result.data.hypertokens?.['card-style']?.['rounded']).toBe('{rounded.md}');
-      }
-    });
-  });
-
   // ── Cycle 6: Malformed YAML ───────────────────────────────────────
   describe('malformed YAML', () => {
     it('returns YAML_PARSE_ERROR on invalid YAML syntax', () => {

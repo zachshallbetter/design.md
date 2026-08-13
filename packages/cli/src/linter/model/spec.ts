@@ -77,7 +77,6 @@ export interface DesignSystemState {
   typography: Map<string, ResolvedTypography>;
   rounded: Map<string, ResolvedDimension>;
   spacing: Map<string, ResolvedDimension>;
-  hypertokens: Map<string, Map<string, ResolvedValue>>;
   components: Map<string, ComponentDef>;
   /** Flat lookup: "colors.primary" → ResolvedColor */
   symbolTable: Map<string, ResolvedValue>;

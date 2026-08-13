@@ -26,15 +26,6 @@ describe('brokenRef', () => {
     expect(findings.some(d => d.message.includes('does not resolve'))).toBe(true);
   });
 
-  it('emits error for unresolved token reference in hypertokens', () => {
-    const state = buildState({
-      colors: { primary: '#ff0000' },
-      hypertokens: { 'card-style': { backgroundColor: '{colors.nonexistent}' } },
-    });
-    const findings = brokenRef(state);
-    expect(findings.some(d => d.path === 'hypertokens.card-style.backgroundColor' && d.message.includes('does not resolve'))).toBe(true);
-  });
-
   it('returns empty when all references resolve', () => {
     const state = buildState({
       colors: { primary: '#ff0000' },

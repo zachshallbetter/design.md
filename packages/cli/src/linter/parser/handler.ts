@@ -220,7 +220,6 @@ export class ParserHandler implements ParserSpec {
       rounded: raw['rounded'] as Record<string, string> | undefined,
       spacing: raw['spacing'] as Record<string, string> | undefined,
       components: raw['components'] as Record<string, Record<string, string>> | undefined,
-      hypertokens: raw['hypertokens'] as Record<string, Record<string, any>> | undefined,
       sourceMap,
       sections,
       documentSections,

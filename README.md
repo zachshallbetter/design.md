@@ -122,9 +122,6 @@ rounded:
   <scale-level>: <Dimension>
 spacing:
   <scale-level>: <Dimension | number>
-hypertokens:
-  <hypertoken-name>:
-    <property-name>: <string | number | boolean | token reference>
 components:
   <component-name>:
     <token-name>: <string | token reference>
@@ -151,9 +148,8 @@ Sections use `##` headings. They can be omitted, but those present must appear i
 | 4 | Layout | Layout & Spacing |
 | 5 | Elevation & Depth | Elevation |
 | 6 | Shapes | |
-| 7 | Hypertokens | |
-| 8 | Components | |
-| 9 | Do's and Don'ts | |
+| 7 | Components | |
+| 8 | Do's and Don'ts | |
 
 ### Component Tokens
 
@@ -170,29 +166,9 @@ components:
     backgroundColor: "{colors.tertiary-container}"
 ```
 
-Valid component properties: `backgroundColor`, `textColor`, `typography`, `rounded`, `padding`, `size`, `height`, `width`, `style`.
+Valid component properties: `backgroundColor`, `textColor`, `typography`, `rounded`, `padding`, `size`, `height`, `width`.
 
 Variants (hover, active, pressed) are expressed as separate component entries with a related key name.
-
-### Hypertokens
-
-Hypertokens are composite token packages (style mixins or visual presets) that bundle multiple token decisions into a single reusable style. The concept was introduced by Jake Albaugh ([@jake-figma](https://github.com/jake-figma)) at [Figma Config 2026: Design context for agentic workflows](https://www.youtube.com/watch?v=D5WUW9X_-L0) (for full context, see the UX Collective article [*"What are hypertokens? The layer between tokens and components, rebuilt for agents"*](https://uxdesign.cc/what-are-hypertokens-the-layer-between-tokens-and-components-rebuilt-for-agents-54154e179bc3)). Hypertokens act as a machine-readable contract of design intent for AI coding agents.
-
-```yaml
-hypertokens:
-  card-style:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.md}"
-    boxShadow: "{shadows.card}"
-```
-
-Components can reference a hypertoken using the `style` property:
-
-```yaml
-components:
-  card-walk-stat:
-    style: "{hypertokens.card-style}"
-```
 
 ### Consumer Behavior for Unknown Content
 
